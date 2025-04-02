@@ -1,0 +1,212 @@
+1. Create database school
+
+
+2. Create table users with columns user_id,user_name,user_dob,user_role(1 = student, 2 = teacher),user_created_on
+
+CREATE TABLE users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_name VARCHAR(100) NOT NULL,
+    user_dob DATE NOT NULL,
+    user_role varchar(20) not null, 
+    user_created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+3. create table sections with id, name
+
+CREATE TABLE sections (
+		section_id int primary key auto_increment not null,
+        section_name varbinary(50) not null
+    );
+
+
+4. create table class with columns id, name, teacher_id, section_id
+
+create table class(
+	class_id int primary key auto_increment,
+    class_name varchar(50) not null,
+    teacher_id int ,
+    section_id int ,
+    foreign key ( teacher_id ) references users(user_id) on delete set null, 
+    foreign key ( section_id ) references sections(section_id) on delete set null
+);
+
+
+
+5. create table enroll with columns id, student_id, class_id
+
+create table enroll(
+	enroll_id int primary key auto_increment,
+    	student_id int,
+    	class_id int,
+    	foreign key(student_id) references users(user_id) on delete set null,
+    	foreign key(class_id) references class(class_id) on delete set null
+);
+
+
+6. Insert 5 users which having role student and Insert 3 users which having role teacher
+
+INSERT INTO users (user_name, user_dob, user_role)
+VALUES 
+    ("Sanket", "2000-04-07", "student"),
+    ("Saurabh", "2001-06-18", "student"),
+    ("Hem", "2000-01-12", "student"),
+    ("Mansi", "1999-11-21", "student"),
+    ("Supriya", "2001-07-29", "student"),
+    ("Nikhil", "1996-02-15", "teacher"),
+    ("Akash", "1995-08-17", "teacher"),
+    ("Kunal", "1996-12-03", "teacher");
+
+
+7. Insert 3 sections with name A, B, C respectively
+
+INSERT INTO sections(section_name)
+values	("A"),
+	("B"),
+        ("C")
+
+
+8. Insert class I with sections A, B, C and Insert Class II with sections A, B and Assign any teacher to any class
+
+INSERT INTO class (class_name, teacher_id, section_id)
+VALUES 
+    ("Class I", 6, 1),
+    ("Class I", 6, 2),
+    ("Class I", 6, 3),
+    ("Class II", 7, 1),
+    ("Class II", 7, 2);
+
+
+
+9. Enroll any two students for class I and remaining students to class II
+
+INSERT INTO enroll (student_id, class_id)
+VALUES 
+    (1, 1),
+    (2, 1),
+    (3, 4), 
+    (4, 4),
+    (5, 4); 
+
+============================================================================================================================================================
+							 	Task
+============================================================================================================================================================
+
+Task 1. Display all students details with  class name, section name,teacher name and sort by user creation date descending, name alphabetically
+
+
+select 	student.user_id as "Student ID", 
+	student.user_name as "Student name", 
+        student.user_dob as "DOB",
+        class.class_name as "Class", 
+        sections.section_name as "Section",
+        teachers.user_name as "Teacher Name"
+from users as student
+join enroll on student.user_id = enroll.student_id
+join class on enroll.class_id = class.class_id
+join sections on class.section_id = sections.section_id
+join users as teachers on class.teacher_id = teachers.user_id
+where student.user_role = "student"
+order by student.user_created_on desc , student.user_name asc;
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Task 2. Display all teachers with class_name of sections A and B
+
+
+select users.user_id, users.user_name, class.class_name , sections.section_name
+from users join class on users.user_id = class.teacher_id
+join sections on class.section_id = sections.section_id 
+where section_name in ("A","B")
+order by users.user_name asc;
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Task 3. Display all students of class I which having sections B or C
+
+select users.user_id, users.user_name, class.class_name , sections.section_name
+from users join enroll on users.user_id = enroll.student_id
+join class on enroll.class_id = class.class_id 
+join sections on class.section_id = sections.section_id
+where 	class.class_name = "Class I" 
+		and sections.section_name in ("B","C") 
+        and users.user_role = "student";
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Task 4. Update 1st,3rd and 4th students dob 2000-10-01, 2001-09-11, 2002-08-11 respectively
+
+
+update users
+set users.user_dob = "2000-10-01"
+where users.user_id = 1;
+
+update users
+set users.user_dob = "2001-09-11"
+where users.user_id = 3;
+
+update users
+set users.user_dob = "2002-08-11"
+where users.user_id = 4;
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Task 5. display all students which having dob from 2000-09-01 to 2001-09-13 and name start with A
+
+select * from users
+where 	users.user_name like "S%"   
+	and users.user_dob between "2000-09-01" and "2001-09-13" 
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Task 6. display number of students belongs to class I and Class II 
+
+
+select class.class_name as "Class", count(enroll.student_id) as "total student" 
+from enroll
+join class on enroll.class_id = class.class_id
+where class.class_name in ("Class I","Class II")
+group by class.class_name;
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Task 7. update students of section C to class II
+
+
+update class
+set class.class_name = "Class II"
+where class.section_id = 3;
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Task 8. Delete all users of section B
+
+
+DELETE FROM users 
+WHERE user_id IN (
+    SELECT enroll.student_id 
+    FROM enroll
+    JOIN class ON enroll.class_id = class.class_id
+    JOIN sections ON class.section_id = sections.section_id
+    WHERE sections.section_name = 'B'
+);
+
+
+============================================================================================================================================================
+							 	END
+============================================================================================================================================================
+
